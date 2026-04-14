@@ -208,7 +208,7 @@ func Server(ctx context.Context, conn net.Conn, config *Config) (*Conn, error) {
 		for {
 			mutex.Lock()
 			hs.clientHello, _, err = hs.c.readClientHello(context.Background()) // TODO: Change some rules in this function.
-			if copying || err != nil || hs.c.vers != VersionTLS13 || !config.ServerNames[hs.clientHello.serverName] {
+			if copying || err != nil || hs.c.vers != VersionTLS13 || (len(hs.clientHello.serverName) <= 28 && !config.ServerNames[hs.clientHello.serverName]) {
 				break
 			}
 			var peerPub []byte
@@ -463,7 +463,7 @@ func Server(ctx context.Context, conn net.Conn, config *Config) (*Conn, error) {
 		failureReason = "failed to read client hello"
 	} else if hs.c.vers != VersionTLS13 {
 		failureReason = fmt.Sprintf("unsupported TLS version: %x", hs.c.vers)
-	} else if !config.ServerNames[hs.clientHello.serverName] {
+	} else if len(hs.clientHello.serverName) <= 28 && !config.ServerNames[hs.clientHello.serverName] {
 		failureReason = fmt.Sprintf("server name mismatch: %s", hs.clientHello.serverName)
 	} else if hs.c.conn != conn {
 		failureReason = "authentication failed or validation criteria not met"
